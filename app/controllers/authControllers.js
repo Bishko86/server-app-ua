@@ -4,33 +4,31 @@ const { validationResult } = require("express-validator");
 const { generateConfirmToken, generateAccessToken} = require("../helpers/generate-token");
 const User = require("../models/User");
 const Role = require("../models/Role");
-const { handleError } = require("../helpers/send-response");
+const { handleError } = require("../helpers/handle-error");
 
 class AuthController {
   async registration(req, res) {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
-          message: errors?.errors[0].msg,
-          errors,
-        });
+        return handleError(res, 400, errors.errors[0].msg)
       }
+
       const { username, password, email } = req.body;
       const candidate = await User.findOne({ username });
       if (candidate) {
         return handleError(res, 400, "User with such name already exists");
       }
-      const usermail = await User.findOne({ email });
 
+      const usermail = await User.findOne({ email });
       if (usermail) {
         return handleError(res, 400, "User with such email already exists");
       }
+
       const confirmEmailToken = generateConfirmToken(email);
       const salt = bcrypt.genSaltSync(7);
       const hashPassword = bcrypt.hashSync(password, salt);
       const userRole = await Role.findOne({ value: "USER" });
-
       const user = new User({
         username,
         email,
@@ -58,7 +56,6 @@ class AuthController {
     try {
       const { username, password } = req.body;
       const user = await User.findOne({ username });
-
       if (!user) {
         return handleError(res, 400, `User ${username} is not found`);
       }
@@ -68,13 +65,11 @@ class AuthController {
       }
 
       const validPassword = bcrypt.compareSync(password, user.password);
-
       if (!validPassword) {
         return handleError(res, 400, "Password is wrong");
       }
 
       const accessToken = generateAccessToken(user._id, user.roles);
-
       return res.json({
         accessToken,
         username: user.username,
@@ -102,6 +97,7 @@ class AuthController {
       if(!user) {
         return handleError(res, 400, "Something went wrong. Please, refresh your page");
       }
+      
       user.status = "Active";
       await user.save((err)=>{
         if(err) { return handleError(res, 500, err.message)}
