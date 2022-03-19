@@ -15,5 +15,6 @@ router.post("/registration",
 );
 router.post("/login", controller.login);
 router.get("/users", roleMiddleware(["USER"]), controller.getUsers);
+router.get("/confirm/:confirmationCode", controller.verifyUser);
 
 module.exports = router;

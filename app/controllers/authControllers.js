@@ -1,16 +1,15 @@
 const nodemailer = require("../config/nodemailer.config");
 const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validator");
-const { generateConfirmToken } = require("../helpers/generate-token")
+const { generateConfirmToken, generateAccessToken} = require("../helpers/generate-token");
 const User = require("../models/User");
 const Role = require("../models/Role");
-const { response } = require("../helpers/send-response");
+const { handleError } = require("../helpers/send-response");
 
 class AuthController {
   async registration(req, res) {
     try {
       const errors = validationResult(req);
-      console.log('4444');
       if (!errors.isEmpty()) {
         return res.status(400).json({
           message: errors?.errors[0].msg,
@@ -20,23 +19,18 @@ class AuthController {
       const { username, password, email } = req.body;
       const candidate = await User.findOne({ username });
       if (candidate) {
-        return response(res, 400, "User with such name already exists");
+        return handleError(res, 400, "User with such name already exists");
       }
-      console.log('33333');
       const usermail = await User.findOne({ email });
 
       if (usermail) {
-        return response(res, 400, "User with such email already exists");
+        return handleError(res, 400, "User with such email already exists");
       }
-      console.log('22222');
       const confirmEmailToken = generateConfirmToken(email);
-      console.log('1111');
-
       const salt = bcrypt.genSaltSync(7);
-      
       const hashPassword = bcrypt.hashSync(password, salt);
       const userRole = await Role.findOne({ value: "USER" });
-      
+
       const user = new User({
         username,
         email,
@@ -56,7 +50,7 @@ class AuthController {
         message: "User was registered successfully! Please check your email",
       });
     } catch (err) {
-      response(res, 400, "Something went wrong");
+      handleError(res, 400, "Something went wrong");
     }
   }
 
@@ -66,17 +60,17 @@ class AuthController {
       const user = await User.findOne({ username });
 
       if (!user) {
-        return response(res, 400, `User ${username} is not found`);
+        return handleError(res, 400, `User ${username} is not found`);
       }
 
-      if (!user.status !== "Active") {
-        return response(res, 401, "Pending Account. Please Verify Your Email!");
+      if (user.status !== "Active") {
+        return handleError(res, 401, "Pending Account. Please Verify Your Email!");
       }
 
       const validPassword = bcrypt.compareSync(password, user.password);
 
       if (!validPassword) {
-        return response(res, 400, "Password is wrong");
+        return handleError(res, 400, "Password is wrong");
       }
 
       const accessToken = generateAccessToken(user._id, user.roles);
@@ -87,7 +81,7 @@ class AuthController {
         roles: user.roles,
       });
     } catch (err) {
-      response(res, 400, "Something went wrong. Please, refresh your page")
+      handleError(res, 400, "Something went wrong. Please, refresh your page");
     }
   }
 
@@ -98,6 +92,27 @@ class AuthController {
     } catch (err) {
       console.log(err);
       res.json(err);
+    }
+  }
+
+  async verifyUser(req, res) {
+    try {
+      const confirmationCode = req.params.confirmationCode
+      const user = await User.findOne({ confirmationCode });
+      if(!user) {
+        return handleError(res, 400, "Something went wrong. Please, refresh your page");
+      }
+      user.status = "Active";
+      await user.save((err)=>{
+        if(err) { return handleError(res, 500, err.message)}
+      });
+      return res.json({
+        status: true,
+        title: "Email successfully verified.",
+        message: "Now you can go to login page."
+      });
+    } catch (error) {
+      return handleError(res, 400, "Something went wrong. Please, refresh your page");
     }
   }
 }

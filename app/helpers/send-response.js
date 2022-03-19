@@ -1,5 +1,5 @@
 module.exports = {
-  response: (response, status, message) => {
+  handleError: (response, status, message) => {
     return response.status(status).json({ message });
   },
 };
