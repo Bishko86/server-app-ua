@@ -1,7 +1,8 @@
 const nodemailer = require("nodemailer");
 const user = process.env.USER;
 const pass = process.env.PASS;
-
+const devMode = process.env.DEV;
+const HOST = devMode ? "127.0.0.1" : "137.184.2.106";
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
@@ -23,7 +24,7 @@ module.exports.sendConfirmationEmail = (name, email, confirmationCode) => {
       html: `<h1>Email Confirmation</h1>
           <h2>Hello ${name}</h2>
           <p>Thank you for subscribing. Please confirm your email by clicking on the following link</p>
-          <a href=http://localhost:4200/confirm/${confirmationCode}> Click here</a>
+          <a href=http://${HOST}/confirm/${confirmationCode}> Click here</a>
           </div>`,
     })
     .catch((err) => console.log("NODEMAILE_ERROR", err));
