@@ -16,6 +16,6 @@ module.exports = (req, res, next) => {
         next()// call next middleware
         
     } catch (error) {
-        handleError(res, 403, "User is not authorized");
+      res.status(403).json({error, result: "User is not authorized"})
     }
 }
