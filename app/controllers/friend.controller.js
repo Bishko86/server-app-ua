@@ -2,6 +2,7 @@ const handleError = require("../helpers/handle-error");
 const Friend = require("../models/Friend");
 
 const getFriends = (req, res) => {
+  console.log('USER', req.user);
   Friend.find()
     .then((friends) => {
       res.status(200).json(friends);

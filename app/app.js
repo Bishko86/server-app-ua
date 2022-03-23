@@ -7,10 +7,10 @@ const cors = require('cors');
 const createPath = require('./helpers/create-path');
 const authRouter = require('./routes/auth.router');
 const friendRouter = require("./routes/friend.routes");
-const PORT = process.env.PORT || 3000; 
-const db =
-  "mongodb+srv://RomanUA:fsX5sbtfrLEUSpP@cluster0.k9f32.mongodb.net/ngrx-auth-db?retryWrites=true&w=majority";
-
+const authMiddleware = require('./middleware/authMiddleware');
+const PORT = process.env.PORT; 
+const db = process.env.MONGO_URL;
+ 
 mongoose
   .connect(db)
   .then((res) => console.log("mongoDB works"))
@@ -22,12 +22,12 @@ app.listen(PORT,(error) => {
 
 app.use(cors({ origin: '*' }));
 app.use(express.json()) //json parser
-app.use(express.static(__dirname + '/angular-ngrx'));
+app.use(express.static(__dirname + '/view'));
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms'))
 app.use("/auth", authRouter); //listen auth routers
 app.use(friendRouter);
-
-app.get('/*', (req, res) => {
+app.get('/*', authMiddleware, (req, res) => {
+  console.log('TEST', req.user);
   const filePath = createPath('index');
   res.sendFile(filePath)
 });
