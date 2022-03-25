@@ -1,10 +1,16 @@
 const handleError = require("../helpers/handle-error");
-const Friend = require("../models/Friend");
+const Friend = require("../models/friend.model");
 
 const getFriends = (req, res) => {
-  console.log('USER', req.user);
+  console.log("USER", req.cookies);
   Friend.find()
     .then((friends) => {
+      res.cookie("Roman", "12345", {
+        maxAge: 86400000,
+        httpOnly: true,
+        sameSite: "None",
+        secure: true,
+      });
       res.status(200).json(friends);
     })
     .catch((err) =>
@@ -16,6 +22,10 @@ const getFriend = (req, res) => {
   const id = req.params.id;
   Friend.findById(id)
     .then((friend) => {
+      res.cookie("bishkoRoman", "accessToken", {
+        maxAge: 900000,
+        httpOnly: true,
+      });
       res.status(200).json(friend);
     })
     .catch((err) => res.status(404).json({ message: "Not found" }));

@@ -1,19 +1,18 @@
 const nodemailer = require("../config/nodemailer.config");
 const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validator");
-const { generateConfirmToken, generateAccessToken} = require("../helpers/generate-token");
-const User = require("../models/User");
-const Role = require("../models/Role");
+const {
+  generateConfirmToken,
+  generateAccessToken,
+} = require("../helpers/generate-token");
+const User = require("../models/user.model");
+const Role = require("../models/role.model");
 const { handleError } = require("../helpers/handle-error");
+const userService = require("../services/user.service");
 
 class AuthController {
-  async registration(req, res) {
+  async registration(req, res, next) {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return handleError(res, 400, errors.errors[0].msg)
-      }
-
       const { username, password, email } = req.body;
       const candidate = await User.findOne({ username });
       if (candidate) {
@@ -48,68 +47,54 @@ class AuthController {
         message: "User was registered successfully! Please check your email",
       });
     } catch (err) {
-      handleError(res, 400, "Something went wrong");
+      next(err);
     }
   }
 
-  async login(req, res) {
+  async login(req, res, next) {
     try {
-      console.log("BODY",req.body);
-      const { username, password } = req.body;
-      const user = await User.findOne({ username });
-      if (!user) {
-        return handleError(res, 400, `User ${username} is not found`);
-      }
-
-      if (user.status !== "Active") {
-        return handleError(res, 401, "Pending Account. Please Verify Your Email!");
-      }
-
-      const validPassword = bcrypt.compareSync(password, user.password);
-      if (!validPassword) {
-        return handleError(res, 400, "Password is wrong");
-      }
-
-      const accessToken = generateAccessToken(user._id, user.roles);
-      return res.json({
-        accessToken,
-        username: user.username,
-        roles: user.roles,
-      });
+      const { email, password } = req.body;
+      const userData = await userService.login(email, password);
+      return res.status(200).json(userData);
     } catch (err) {
-      handleError(res, 400, "Something went wrong. Please, refresh your page");
+      next(err);
     }
   }
 
-  async getUsers(req, res) {
+  async getUsers(req, res, next) {
     try {
       const users = await User.find();
       res.json(users);
     } catch (err) {
-      console.log(err);
-      res.json(err);
+      next(err);
     }
   }
 
-  async verifyUser(req, res) {
+  async verifyUser(req, res, next) {
     try {
-      const confirmationCode = req.params.confirmationCode
+      const confirmationCode = req.params.confirmationCode;
       const user = await User.findOne({ confirmationCode });
-      if(!user) {
-        return handleError(res, 400, "Something went wrong. Please, refresh your page");
+      if (!user) {
+        return handleError(
+          res,
+          400,
+          "Something went wrong. Please, refresh your page"
+        );
       }
-      
+
       user.status = "Active";
-      await user.save((err)=>{
-        if(err) { return handleError(res, 500, err.message)}
+      await user.save((err) => {
+        if (err) {
+          return handleError(res, 500, err.message);
+        }
       });
       return res.json({
         status: true,
         title: "Email successfully verified.",
-        message: "Now you can go to login page."
+        message: "Now you can go to login page.",
       });
     } catch (error) {
-      return handleError(res, 400, "Something went wrong. Please, refresh your page");
+      next(err);
     }
   }
 }
