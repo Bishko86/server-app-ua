@@ -7,6 +7,7 @@ module.exports = (req, res, next) => {
         next();
     }
     try {
+      console.log('AUTH', req.headers.authorization);
         const token = req.headers.authorization.split(' ')[1];
         if(!token) {
             return handleError(res, 403, "User is not authorized");
@@ -16,6 +17,6 @@ module.exports = (req, res, next) => {
         next()// call next middleware
         
     } catch (error) {
-      res.status(403).json({error, result: "User is not authorized"})
+      return res.status(403).json({error, result: "User is not authorized"})
     }
 }
