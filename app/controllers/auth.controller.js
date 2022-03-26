@@ -39,23 +39,10 @@ class AuthController {
   async verifyUser(req, res, next) {
     try {
       const confirmationCode = req.params.confirmationCode;
-      const user = await User.findOne({ confirmationCode });
-      if (!user) {
-        return handleError(
-          res,
-          400,
-          "Something went wrong. Please, refresh your page"
-        );
-      }
+      const userStatus = await userService.verifyUser(confirmationCode);
 
-      user.status = "Active";
-      await user.save((err) => {
-        if (err) {
-          return handleError(res, 500, err.message);
-        }
-      });
       return res.json({
-        status: true,
+        status: userStatus,
         title: "Email successfully verified.",
         message: "Now you can go to login page.",
       });
