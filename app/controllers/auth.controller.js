@@ -1,12 +1,5 @@
-const nodemailer = require("../config/nodemailer.config");
-const bcrypt = require("bcryptjs");
-const { validationResult } = require("express-validator");
-const {
-  generateConfirmToken,
-  generateAccessToken,
-} = require("../helpers/generate-token");
+
 const User = require("../models/user.model");
-const Role = require("../models/role.model");
 const { handleError } = require("../helpers/handle-error");
 const userService = require("../services/user.service");
 
@@ -14,37 +7,10 @@ class AuthController {
   async registration(req, res, next) {
     try {
       const { username, password, email } = req.body;
-      const candidate = await User.findOne({ username });
-      if (candidate) {
-        return handleError(res, 400, "User with such name already exists");
-      }
-
-      const usermail = await User.findOne({ email });
-      if (usermail) {
-        return handleError(res, 400, "User with such email already exists");
-      }
-
-      const confirmEmailToken = generateConfirmToken(email);
-      const salt = bcrypt.genSaltSync(7);
-      const hashPassword = bcrypt.hashSync(password, salt);
-      const userRole = await Role.findOne({ value: "USER" });
-      const user = new User({
-        username,
-        email,
-        password: hashPassword,
-        status: "Pending",
-        confirmationCode: confirmEmailToken,
-        roles: [userRole.value],
-      });
-
-      await user.save();
-      nodemailer.sendConfirmationEmail(
-        user.username,
-        user.email,
-        confirmEmailToken
-      );
+      const user = await userService.registration(email, password, username);
       return res.json({
         message: "User was registered successfully! Please check your email",
+        data: user,
       });
     } catch (err) {
       next(err);
@@ -73,23 +39,10 @@ class AuthController {
   async verifyUser(req, res, next) {
     try {
       const confirmationCode = req.params.confirmationCode;
-      const user = await User.findOne({ confirmationCode });
-      if (!user) {
-        return handleError(
-          res,
-          400,
-          "Something went wrong. Please, refresh your page"
-        );
-      }
+      const userStatus = await userService.verifyUser(confirmationCode);
 
-      user.status = "Active";
-      await user.save((err) => {
-        if (err) {
-          return handleError(res, 500, err.message);
-        }
-      });
       return res.json({
-        status: true,
+        status: userStatus,
         title: "Email successfully verified.",
         message: "Now you can go to login page.",
       });

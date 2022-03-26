@@ -6,5 +6,5 @@ module.exports = (req, res, next) => {
   if (!errors.isEmpty()) {
    return next(ApiError.BadRequest("Error during validation", errors.array()));
   }
-  next(req);
+  next();
 }
