@@ -1,7 +1,11 @@
-const bcrypt = require("bcryptjs/dist/bcrypt");
+const bcrypt = require("bcrypt");
+const { v4: uuidv4 } = require("uuid");
 const ApiError = require("../exceptions/api.error");
 const User = require("../models/user.model");
+const Role = require("../models/role.model");
 const tokenService = require("./token.service");
+const UserDto = require("../dtos/user.dto");
+const mailService = require("../services/mail.service");
 
 class UserService {
   async login(email, password) {
@@ -29,6 +33,33 @@ class UserService {
     const tokens = tokenService.generateTokens(userDto);
     await tokenService.saveRefreshToken(userDto.id, tokens.refreshToken);
     return { ...tokens, user: userDto };
+  }
+
+  async registration(email, password, username = "") {
+    const candidate = await User.findOne({ email });
+    if (candidate) {
+      throw ApiError.BadRequest(`User with such ${email} alredy exists`);
+    }
+
+    const userRole = await Role.findOne({ value: "USER" });
+    const hashPassword = await bcrypt.hash(password, 3);
+    const confirmationCode = uuidv4();
+
+    const user = await User.create({
+      username,
+      email,
+      password: hashPassword,
+      confirmationCode,
+      roles: [userRole.value],
+    });
+
+    await mailService.sendActivationEmail(
+      email,
+      `${process.env.CLIENT_URL}/api/activate/${confirmationCode}`
+    );
+
+    const userDto = new UserDto(user);
+    return userDto;
   }
 }
 
