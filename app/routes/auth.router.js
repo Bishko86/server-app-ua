@@ -15,5 +15,6 @@ router.post("/registration", [...emailPassValidator, validatorMiddleware], contr
 router.post("/login", [...emailPassValidator, validatorMiddleware], controller.login);
 router.get("/users", roleMiddleware(["USER"]), controller.getUsers);
 router.get("/confirm/:confirmationCode", controller.verifyUser);
+router.get("/refresh", controller.refresh);
 
 module.exports = router;

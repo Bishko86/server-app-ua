@@ -1,8 +1,5 @@
-
 const User = require("../models/user.model");
-const { handleError } = require("../helpers/handle-error");
 const userService = require("../services/user.service");
-
 class AuthController {
   async registration(req, res, next) {
     try {
@@ -21,6 +18,10 @@ class AuthController {
     try {
       const { email, password } = req.body;
       const userData = await userService.login(email, password);
+      res.cookie("refreshToken", userData.refreshToken, {
+        maxAge: 15 * 86400000,
+        httpOnly: true,
+      });
       return res.status(200).json(userData);
     } catch (err) {
       next(err);
@@ -48,6 +49,20 @@ class AuthController {
       });
     } catch (error) {
       next(err);
+    }
+  }
+
+  async refresh(req, res, next) {
+    try {
+      const { refreshToken } = req.cookies;
+      const userData = await userService.refresh(refreshToken);
+      res.cookie("refreshToken", userData.refreshToken, {
+        maxAge: 15 * 86400000,
+        httpOnly: true,
+      });
+      return res.status(200).json(userData);
+    } catch (error) {
+      next(error);
     }
   }
 }
