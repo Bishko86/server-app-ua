@@ -22,7 +22,8 @@ class AuthController {
         maxAge: 15 * 86400000,
         httpOnly: true,
       });
-      return res.status(200).json(userData);
+      const { user, accessToken } = userData;
+      return res.status(200).json({ user, accessToken });
     } catch (err) {
       next(err);
     }
@@ -60,7 +61,8 @@ class AuthController {
         maxAge: 15 * 86400000,
         httpOnly: true,
       });
-      return res.status(200).json(userData);
+      const { user, accessToken } = userData;
+      return res.status(200).json({ user, accessToken });
     } catch (error) {
       next(error);
     }

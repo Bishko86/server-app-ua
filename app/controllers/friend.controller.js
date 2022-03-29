@@ -2,7 +2,6 @@ const handleError = require("../helpers/handle-error");
 const Friend = require("../models/friend.model");
 
 const getFriends = (req, res) => {
-  console.log("USER", req.cookies);
   Friend.find()
     .then((friends) => {
       res.cookie("Roman", "12345", {

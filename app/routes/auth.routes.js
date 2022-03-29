@@ -2,7 +2,7 @@ const Router = require("express");
 const router = new Router();
 const controller = require("../controllers/auth.controller");
 const { check } = require("express-validator");
-const roleMiddleware = require("../middleware/roleMiddleware");
+const roleMiddleware = require("../middleware/role.middleware");
 const validatorMiddleware = require("../middleware/validator.middleware");
 
 const emailPassValidator = [
