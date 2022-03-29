@@ -2,7 +2,7 @@ const Router = require("express");
 const router = new Router();
 const controller = require("../controllers/auth.controller");
 const { check } = require("express-validator");
-const roleMiddleware = require("../middleware/roleMiddleware");
+const roleMiddleware = require("../middleware/role.middleware");
 const validatorMiddleware = require("../middleware/validator.middleware");
 
 const emailPassValidator = [
@@ -15,5 +15,6 @@ router.post("/registration", [...emailPassValidator, validatorMiddleware], contr
 router.post("/login", [...emailPassValidator, validatorMiddleware], controller.login);
 router.get("/users", roleMiddleware(["USER"]), controller.getUsers);
 router.get("/confirm/:confirmationCode", controller.verifyUser);
+router.get("/refresh", controller.refresh);
 
 module.exports = router;
