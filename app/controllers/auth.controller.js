@@ -7,7 +7,7 @@ class AuthController {
       const user = await userService.registration(email, password, username);
       return res.json({
         message: "User was registered successfully! Please check your email",
-        data: user,
+        registrateIsSuccess: true,
       });
     } catch (err) {
       next(err);
@@ -22,8 +22,8 @@ class AuthController {
         maxAge: 15 * 86400000,
         httpOnly: true,
       });
-      const { user, accessToken } = userData;
-      return res.status(200).json({ user, accessToken });
+      const { user, accessToken, refreshToken } = userData;
+      return res.status(200).json({ ...user, accessToken, refreshToken });
     } catch (err) {
       next(err);
     }
@@ -49,20 +49,24 @@ class AuthController {
         message: "Now you can go to login page.",
       });
     } catch (error) {
-      next(err);
+      next(error);
     }
   }
 
   async refresh(req, res, next) {
     try {
-      const { refreshToken } = req.cookies;
+      const { refreshToken } = req.params;
       const userData = await userService.refresh(refreshToken);
       res.cookie("refreshToken", userData.refreshToken, {
         maxAge: 15 * 86400000,
         httpOnly: true,
       });
-      const { user, accessToken } = userData;
-      return res.status(200).json({ user, accessToken });
+      return res
+        .status(200)
+        .json({
+          refreshToken: userData.refreshToken,
+          accessToken: userData.accessToken,
+        });
     } catch (error) {
       next(error);
     }

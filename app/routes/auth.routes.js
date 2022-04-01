@@ -6,7 +6,6 @@ const roleMiddleware = require("../middleware/role.middleware");
 const validatorMiddleware = require("../middleware/validator.middleware");
 
 const emailPassValidator = [
-  check("username", "Username cannot be empty").notEmpty(),
   check("password", "Password should be not less than 4, and no longer than 8 symbols").isLength({ min: 4, max: 10 }),
   check("email", "Invalid email").isEmail(),
 ];
@@ -15,6 +14,6 @@ router.post("/registration", [...emailPassValidator, validatorMiddleware], contr
 router.post("/login", [...emailPassValidator, validatorMiddleware], controller.login);
 router.get("/users", roleMiddleware(["USER"]), controller.getUsers);
 router.get("/confirm/:confirmationCode", controller.verifyUser);
-router.get("/refresh", controller.refresh);
+router.get("/refresh/:refreshToken", controller.refresh);
 
 module.exports = router;
