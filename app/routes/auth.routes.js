@@ -15,7 +15,5 @@ router.post("/login", [...emailPassValidator, validatorMiddleware], controller.l
 router.get("/users", roleMiddleware(["USER"]), controller.getUsers);
 router.get("/confirm/:confirmationCode", controller.verifyUser);
 router.get("/refresh/:refreshToken", controller.refresh);
-//test
-//comment
 
 module.exports = router;
