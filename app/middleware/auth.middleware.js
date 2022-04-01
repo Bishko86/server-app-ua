@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const ApiError = require("../exceptions/api.error");
-const secret = process.env.SECRET;
+const secret = process.env.JWT_ACCESS_SECRET;
 
 module.exports = (req, res, next) => {
   if (req.method === "OPTIONS") {
@@ -8,6 +8,7 @@ module.exports = (req, res, next) => {
   }
   try {
     const token = req.headers.authorization.split(" ")[1];
+    
     if (!token) {
       throw ApiError.UnauthorizedError();
     }

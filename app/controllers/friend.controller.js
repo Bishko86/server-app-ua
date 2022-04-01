@@ -1,20 +1,19 @@
+const ApiError = require("../exceptions/api.error");
 const handleError = require("../helpers/handle-error");
 const Friend = require("../models/friend.model");
 
 const getFriends = (req, res) => {
+  const { refreshToken } = req.cookies;
+  console.log('Cookies from client',refreshToken);
   Friend.find()
     .then((friends) => {
-      res.cookie("Roman", "12345", {
-        maxAge: 86400000,
-        httpOnly: true,
-        sameSite: "None",
-        secure: true,
-      });
       res.status(200).json(friends);
     })
-    .catch((err) =>
-      handleError(res, 400, "Something went wrong. Please refresh page")
-    );
+    .catch((err) => {
+      throw ApiError.BadRequest(
+        "Something went wrong. Please refresh page"
+      );
+    });
 };
 
 const getFriend = (req, res) => {
@@ -27,7 +26,9 @@ const getFriend = (req, res) => {
       });
       res.status(200).json(friend);
     })
-    .catch((err) => res.status(404).json({ message: "Not found" }));
+    .catch((err) => {
+      throw ApiError.BadRequest("Not found");
+    });
 };
 
 const addFriend = (req, res) => {

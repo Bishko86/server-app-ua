@@ -28,7 +28,7 @@ app.use(cookieParser());
 app.use(
   cors({
     credentials: true,
-    origin: [process.env.CLIENT_URL],
+    origin: [process.env.CLIENT_URL, 'http://localhost:4200', 'http://localhost:8080'],
   })
 );
 app.use(express.static(__dirname + "/view"));
@@ -38,7 +38,7 @@ app.use(
 app.use("/auth", authRouter);
 app.use(friendRouter);
 app.use(errorMiddleware);
-app.get("/*", authMiddleware, (req, res) => {
+app.get("/*", (req, res) => {
   const filePath = createPath("index");
   res.sendFile(filePath);
 });
