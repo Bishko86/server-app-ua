@@ -25,5 +25,8 @@
   },
   "engines": {
     "node": "14.15.5"
+  },
+  "devDependencies": {
+    "grunt": "^1.4.1"
   }
 }
