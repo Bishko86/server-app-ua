@@ -35,10 +35,15 @@ class UserService {
   async registration(email, password, username = "") {
     const candidate = await User.findOne({ email });
     if (candidate) {
-      throw ApiError.BadRequest(`User with such ${email} alredy exists`);
+      throw ApiError.BadRequest(`User with such ${email} allredy exists`);
     }
 
-    const userRole = await Role.findOne({ value: "USER" });
+    let userRole = await Role.findOne({ value: "USER" });
+    if (!userRole) {
+      userRole = {
+        value: "USER",
+      }
+    }
     const hashPassword = await bcrypt.hash(password, 3);
     const confirmationCode = uuidv4();
 

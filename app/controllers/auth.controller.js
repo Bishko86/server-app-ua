@@ -18,11 +18,10 @@ class AuthController {
     try {
       const { email, password } = req.body;
       const userData = await userService.login(email, password);
-      res.cookie("refreshToken", userData.refreshToken, {
-        maxAge: 15 * 86400000,
-        httpOnly: true,
-      });
       const { user, accessToken } = userData;
+
+      setCookies(res, userData.refreshToken);
+
       return res.status(200).json({ user, accessToken });
     } catch (err) {
       next(err);
@@ -49,7 +48,7 @@ class AuthController {
         message: "Now you can go to login page.",
       });
     } catch (error) {
-      next(err);
+      next(error);
     }
   }
 
@@ -57,11 +56,10 @@ class AuthController {
     try {
       const { refreshToken } = req.cookies;
       const userData = await userService.refresh(refreshToken);
-      res.cookie("refreshToken", userData.refreshToken, {
-        maxAge: 15 * 86400000,
-        httpOnly: true,
-      });
       const { user, accessToken } = userData;
+
+      setCookies(res, userData.refreshToken);
+
       return res.status(200).json({ user, accessToken });
     } catch (error) {
       next(error);
@@ -70,3 +68,14 @@ class AuthController {
 }
 
 module.exports = new AuthController();
+
+function setCookies(res, refreshToken) {
+  res.cookie("refreshToken", refreshToken, {
+    path: '/',
+    maxAge: 86400000,
+    httpOnly: true,
+    sameSite: "Lax",
+    secure: true,
+    domain: ".localhost",
+  });
+}
