@@ -33,11 +33,6 @@ app.use(
   })
 );
 
-app.use((req, res, next) => {
-  res.header('Cache-Control', 'max-age=300');
-  next();
-});
-
 app.use(express.static(__dirname + "/view"));
 
 app.use(

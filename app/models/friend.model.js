@@ -10,28 +10,6 @@ const Friend = new Schema({
   email: {
     type: String,
   },
-  address: {
-    street: {
-      type: String,
-    },
-    suite: {
-      type: Date,
-    },
-    city: {
-      type: String,
-    },
-    zipcode: {
-      type: String,
-    },
-    geo: {
-      lat: {
-        type: String,
-      },
-      lng: {
-        type: String,
-      },
-    },
-  },
   phone: {
     type: String,
   },
@@ -39,13 +17,16 @@ const Friend = new Schema({
     type: String,
   },
   company: {
-    name: {
+    type: String,
+  },
+  address: {
+    street: {
       type: String,
     },
-    catchPhrase: {
+    city: {
       type: String,
     },
-    bs: {
+    zipcode: {
       type: String,
     },
   },
