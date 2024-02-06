@@ -10,16 +10,21 @@ const mailService = require("../services/mail.service");
 class UserService {
   async login(email, password) {
     const user = await User.findOne({ email });
+
     if (!user) {
       throw ApiError.BadRequest("There is no such user");
     }
+
     if (user.status === "Pending") {
       throw ApiError.BadRequest("Please verificate your email");
     }
+
     const isPasswordEqual = await bcrypt.compare(password, user.password);
+
     if (!isPasswordEqual) {
       throw ApiError.BadRequest("Wrong password");
     }
+
     const userDto = {
       username: user.username,
       email: user.email,
@@ -27,21 +32,31 @@ class UserService {
       roles: user.roles,
       id: user._id,
     };
+
     const tokens = tokenService.generateTokens(userDto);
+
     await tokenService.saveRefreshToken(userDto.id, tokens.refreshToken);
+
     return { ...tokens, user: userDto };
   }
 
   async registration(email, password, username = "") {
     const candidate = await User.findOne({ email });
+
     if (candidate) {
-      throw ApiError.BadRequest(`User with such ${email} alredy exists`);
+      throw ApiError.BadRequest(`User with such ${email} allredy exists`);
     }
 
-    const userRole = await Role.findOne({ value: "USER" });
+    let userRole = await Role.findOne({ value: "USER" });
+
+    if (!userRole) {
+      userRole = {
+        value: "USER",
+      }
+    }
+
     const hashPassword = await bcrypt.hash(password, 3);
     const confirmationCode = uuidv4();
-
     const user = await User.create({
       username,
       email,
@@ -57,33 +72,47 @@ class UserService {
     );
 
     const userDto = new UserDto(user);
+
     return userDto;
   }
 
   async verifyUser(confirmationCode) {
-    const user = await User.findOne({ confirmationCode });
-    if (user.confirmationCode !== confirmationCode) {
-      throw ApiError.BadRequest("Bad confirmation code");
+    try {
+      const user = await User.findOne({ confirmationCode });
+
+      if (user.confirmationCode !== confirmationCode) {
+        throw ApiError.BadRequest("Bad confirmation code");
+      }
+
+      user.status = "Active";
+      user.save();
+
+      return user.status;
+    } catch(err) {
+      console.error(err);
+      throw ApiError.BadRequest;
     }
-    user.status = "Active";
-    user.save();
-    return user.status;
+
   }
 
   async refresh(refreshToken) {
     if (!refreshToken) {
-      throw ApiError.UnauthorazedError();
+      throw new Error(401, "User is not authorized 55");
     }
+
     const userData = tokenService.validateRefreshToken(refreshToken);
     const tokenFromDb = await tokenService.findToken(refreshToken);
+
     if (!userData || !tokenFromDb) {
       throw ApiError.UnauthorizedError();
     }
+
     const user = await User.findById(userData.id);
     const userDto = new UserDto(user);
     const tokens = tokenService.generateTokens({ ...userDto });
    
     await tokenService.saveRefreshToken(user.id, tokens.refreshToken);
+    
     return { ...tokens, user: userDto };
   }
 }
